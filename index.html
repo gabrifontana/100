@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gioco dei Numeri</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 50px);
+            grid-template-rows: repeat(10, 50px);
+            gap: 5px;
+            border: 2px solid #333;
+            border-radius: 10px;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            background-color: #d3d3d3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 20px;
+            border-radius: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .cell.used {
+            background-color: #f1f1f1;
+        }
+
+        .cell.valid {
+            background-color: #87CEFA; /* Celeste per le celle valide */
+        }
+
+        .cell:hover {
+            background-color: #c1c1c1; /* Colore per hover */
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .info {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="grid" id="grid"></div>
+        <div class="controls">
+            <button class="button" onclick="resetGame()">Ricomincia</button>
+        </div>
+        <div class="info" id="info">
+            <p>Numeri piazzati: 0</p>
+        </div>
+    </div>
+  <script>
+    const gridSize = 10;
+    let grid = [];
+    let currentNumber = 1;
+    let cellsUsed = 0;
+    let gameOver = false;
+    let validMoves = [];  // Lista per tracciare le celle valide
+    let lastPlaced = null; // Memorizza la posizione dell'ultimo numero piazzato
+    const gridContainer = document.getElementById("grid");
+    const info = document.getElementById("info");
+
+    // Funzione per inizializzare il gioco
+    function initializeGame() {
+        grid = [];
+        validMoves = [];
+        cellsUsed = 0;
+        currentNumber = 1;
+        gameOver = false;
+        lastPlaced = null; // Resetta l'ultima posizione piazzata
+        gridContainer.innerHTML = '';
+
+        // Crea la griglia
+        for (let row = 0; row < gridSize; row++) {
+            grid[row] = [];
+            for (let col = 0; col < gridSize; col++) {
+                grid[row][col] = {
+                    isUsed: false,
+                    number: null
+                };
+            }
+        }
+
+        // Crea le celle della griglia
+        for (let row = 0; row < gridSize; row++) {
+            for (let col = 0; col < gridSize; col++) {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+                cell.addEventListener("click", () => handleCellClick(row, col));
+                gridContainer.appendChild(cell);
+            }
+        }
+        updateInfo();
+        calculateValidMoves(); // Calcola le mosse valide all'inizio del gioco
+        highlightValidMoves(); // Evidenzia le mosse valide
+    }
+
+    // Funzione per gestire il clic sulla cella
+    function handleCellClick(row, col) {
+        if (gameOver) return;
+
+        const cell = gridContainer.children[row * gridSize + col];
+        if (grid[row][col].isUsed) return; // Se la cella è già occupata, non fare nulla
+
+        // Verifica se la cella selezionata è valida
+        if (isValidMove(row, col)) {
+            grid[row][col].isUsed = true;
+            grid[row][col].number = currentNumber;
+            cell.classList.add("used");
+            cell.textContent = currentNumber;
+
+            // Aggiorna l'ultima posizione piazzata
+            lastPlaced = [row, col];
+
+            cellsUsed++;
+            currentNumber++;
+
+            // Calcola le mosse valide per il prossimo numero
+            calculateValidMoves();
+
+            // Verifica se ci sono ancora mosse valide
+            if (!hasValidMoves()) {
+                gameOver = true;
+                alert("Gioco finito! Hai piazzato " + (cellsUsed) + " numeri.");
+                disableAllCells(); // Disabilita tutte le celle
+            }
+
+            updateInfo();
+            highlightValidMoves(); // Evidenzia le celle valide per il prossimo numero
+        }
+    }
+
+    // Funzione per evidenziare le celle valide per il prossimo numero
+    function highlightValidMoves() {
+        // Rimuovi la classe "valid" da tutte le celle precedenti
+        const cells = document.querySelectorAll(".cell");
+        cells.forEach(cell => cell.classList.remove("valid"));
+
+        // Evidenzia le celle dove si può piazzare il prossimo numero
+        validMoves.forEach(([r, c]) => {
+            const cell = gridContainer.children[r * gridSize + c];
+            cell.classList.add("valid");
+        });
+    }
+
+    // Funzione aggiornata per calcolare le mosse valide
+    function calculateValidMoves() {
+        validMoves = [];  // Reset della lista delle mosse valide
+
+        // Se non è stato piazzato nessun numero, tutte le celle sono valide
+        if (!lastPlaced) {
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    if (!grid[r][c].isUsed) {
+                        validMoves.push([r, c]);  // Aggiungi tutte le celle non utilizzate
+                    }
+                }
+            }
+            return;
+        }
+
+        let [lastRow, lastCol] = lastPlaced;
+
+        // Calcoliamo le celle valide a distanza esatta di 3 in tutte le direzioni
+        const directions = [
+            { dr: 0, dc: 3 },  // Destra
+            { dr: 0, dc: -3 }, // Sinistra
+            { dr: 3, dc: 0 },  // Sotto
+            { dr: -3, dc: 0 }, // Sopra
+            { dr: 2, dc: 2 },  // Diagonale giù-destra
+            { dr: 2, dc: -2 }, // Diagonale giù-sinistra
+            { dr: -2, dc: 2 }, // Diagonale su-destra
+            { dr: -2, dc: -2 }, // Diagonale su-sinistra
+        ];
+
+        // Verifica tutte le direzioni
+        directions.forEach(({ dr, dc }) => {
+            let newRow = lastRow + dr;
+            let newCol = lastCol + dc;
+            if (isInBounds(newRow, newCol) && !grid[newRow][newCol].isUsed) {
+                validMoves.push([newRow, newCol]);
+            }
+        });
+    }
+
+    // Funzione per verificare se una cella è all'interno dei limiti della griglia
+    function isInBounds(row, col) {
+        return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
+    }
+
+    // Funzione per verificare se una mossa è valida
+    function isValidMove(row, col) {
+        return validMoves.some(([r, c]) => r === row && c === col);
+    }
+
+    // Funzione per verificare se ci sono ancora mosse valide
+    function hasValidMoves() {
+        return validMoves.length > 0;
+    }
+
+    // Funzione per aggiornare l'informazione sui numeri piazzati
+    function updateInfo() {
+        info.innerHTML = `<p>Numeri piazzati: ${cellsUsed}</p>`;
+    }
+
+    // Funzione per disabilitare tutte le celle alla fine del gioco
+    function disableAllCells() {
+        const cells = document.querySelectorAll(".cell");
+        cells.forEach(cell => cell.removeEventListener("click", handleCellClick));
+    }
+
+    // Funzione per riavviare il gioco
+    function resetGame() {
+        initializeGame();
+    }
+
+    // Inizializza il gioco all'avvio
+    initializeGame();
+</script>
+</body>
+</html>
