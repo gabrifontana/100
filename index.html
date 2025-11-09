@@ -1,304 +1,413 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gioco dei Numeri</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Number Grid Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f4f4f4;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        .container {
-            max-width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(10, minmax(30px, 50px));
-            grid-template-rows: repeat(10, minmax(30px, 50px));
-            gap: 5px;
-            border: 2px solid #333;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .cell {
-            width: 100%;
-            height: 100%;
-            background-color: #d3d3d3;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: calc(12px + 0.5vw);
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-        }
-
-        .cell.used {
-            background-color: #f1f1f1;
-        }
-
-        .cell.valid {
-            background-color: #a0e3ff;
-        }
-
-        .cell.valid:hover {
-            background-color: #7fc7ff;
-        }
-
-        .cell:hover {
-            background-color: #c1c1c1;
-        }
-
-        .controls {
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .button {
-            padding: 10px 20px;
-            background-color: #296dff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .button:hover {
-            background-color: #1b4bb3;
-        }
-
-        .info {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 18px;
-        }
-
-        /* Modal styling */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            width: 80%;
-            max-width: 400px;
-        }
-
-        .modal h2 {
-            color: #296dff;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-
-        .modal p {
-            font-size: 18px;
-            margin: 10px 0;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 600px) {
-            .grid {
-                grid-template-columns: repeat(10, minmax(25px, 30px));
-                grid-template-rows: repeat(10, minmax(25px, 30px));
-                gap: 4px;
-            }
-
-            .cell {
-                font-size: calc(10px + 1vw);
-            }
-
-            .button {
-                font-size: 14px;
-            }
-
-            .info {
-                font-size: 16px;
-            }
+            font-family: 'Poppins', sans-serif;
         }
     </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
 </head>
-<body>
-    <div class="container">
-        <div class="grid" id="grid"></div>
-        <div class="controls">
-            <button class="button" onclick="resetGame()">Ricomincia</button>
-        </div>
-        <div class="info" id="info">
-            <p>Numeri piazzati: 0</p>
-        </div>
-    </div>
-    <div class="modal" id="gameOverModal">
-        <div class="modal-content">
-            <h2>Gioco Finito!</h2>
-            <p id="finalScore">Hai piazzato X numeri.</p>
-            <button class="button" onclick="resetGame()">Ricomincia</button>
-        </div>
-    </div>
-  <script>
-    const gridSize = 10;
-    let grid = [];
-    let currentNumber = 1;
-    let cellsUsed = 0;
-    let gameOver = false;
-    let validMoves = [];
-    let lastPlaced = null;
-    const gridContainer = document.getElementById("grid");
-    const info = document.getElementById("info");
-    const gameOverModal = document.getElementById("gameOverModal");
-    const finalScore = document.getElementById("finalScore");
+<body class="bg-slate-900 text-slate-100">
+    <div id="root"></div>
+    <script type="module">
+        import React from 'react';
+        import ReactDOM from 'react-dom/client';
 
-    // Function to initialize the game
-    function initializeGame() {
-        grid = [];
-        validMoves = [];
-        cellsUsed = 0;
-        currentNumber = 1;
-        gameOver = false;
-        lastPlaced = null;
-        gridContainer.innerHTML = '';
-        gameOverModal.style.display = "none";
+        const h = React.createElement;
+        const { useState, useEffect, useMemo, useCallback } = React;
 
-        for (let row = 0; row < gridSize; row++) {
-            grid[row] = [];
-            for (let col = 0; col < gridSize; col++) {
-                grid[row][col] = { isUsed: false, number: null };
-            }
-        }
-
-        for (let row = 0; row < gridSize; row++) {
-            for (let col = 0; col < gridSize; col++) {
-                const cell = document.createElement("div");
-                cell.classList.add("cell");
-                cell.dataset.row = row;
-                cell.dataset.col = col;
-                cell.addEventListener("click", () => handleCellClick(row, col));
-                gridContainer.appendChild(cell);
-            }
-        }
-        updateInfo();
-        calculateValidMoves();
-        highlightValidMoves();
-    }
-
-    function handleCellClick(row, col) {
-        if (gameOver) return;
-
-        const cell = gridContainer.children[row * gridSize + col];
-        if (grid[row][col].isUsed) return;
-
-        if (isValidMove(row, col)) {
-            grid[row][col].isUsed = true;
-            grid[row][col].number = currentNumber;
-            cell.classList.add("used");
-            cell.textContent = currentNumber;
-
-            lastPlaced = [row, col];
-            cellsUsed++;
-            currentNumber++;
-
-            calculateValidMoves();
-            if (!hasValidMoves()) {
-                endGame();
-            } else {
-                highlightValidMoves();
-            }
-
-            updateInfo();
-        }
-    }
-
-    function endGame() {
-        gameOver = true;
-        finalScore.textContent = `Hai piazzato ${cellsUsed} numeri.`;
-        gameOverModal.style.display = "flex";
-    }
-
-    function highlightValidMoves() {
-        const cells = document.querySelectorAll(".cell");
-        cells.forEach(cell => cell.classList.remove("valid"));
-
-        validMoves.forEach(([r, c]) => {
-            const cell = gridContainer.children[r * gridSize + c];
-            cell.classList.add("valid");
-        });
-    }
-
-    function calculateValidMoves() {
-        validMoves = [];
-        if (!lastPlaced) {
-            for (let r = 0; r < gridSize; r++) {
-                for (let c = 0; c < gridSize; c++) {
-                    if (!grid[r][c].isUsed) validMoves.push([r, c]);
-                }
-            }
-            return;
-        }
-
-        let [lastRow, lastCol] = lastPlaced;
-        const directions = [
-            { dr: 0, dc: 3 }, { dr: 0, dc: -3 },
-            { dr: 3, dc: 0 }, { dr: -3, dc: 0 },
-            { dr: 2, dc: 2 }, { dr: 2, dc: -2 },
-            { dr: -2, dc: 2 }, { dr: -2, dc: -2 },
+        // --- From constants.ts ---
+        const GRID_SIZE = 10;
+        const DIRECTIONS = [
+          { dr: 0, dc: 3 }, { dr: 0, dc: -3 },
+          { dr: 3, dc: 0 }, { dr: -3, dc: 0 },
+          { dr: 2, dc: 2 }, { dr: 2, dc: -2 },
+          { dr: -2, dc: 2 }, { dr: -2, dc: -2 },
         ];
 
-        directions.forEach(({ dr, dc }) => {
-            let newRow = lastRow + dr;
-            let newCol = lastCol + dc;
-            if (isInBounds(newRow, newCol) && !grid[newRow][newCol].isUsed) {
-                validMoves.push([newRow, newCol]);
+        // --- From lib/stats.ts ---
+        const STATS_KEY = 'number-grid-challenge-stats';
+        const initialStats = {
+          gamesPlayed: 0,
+          wins: 0,
+          totalScore: 0,
+          fastestWinTime: null,
+        };
+        function loadStats() {
+          try {
+            const statsJson = localStorage.getItem(STATS_KEY);
+            if (statsJson) {
+              const parsedStats = JSON.parse(statsJson);
+              if (
+                typeof parsedStats.gamesPlayed === 'number' &&
+                typeof parsedStats.wins === 'number' &&
+                typeof parsedStats.totalScore === 'number'
+              ) {
+                 return { ...initialStats, ...parsedStats };
+              }
             }
-        });
-    }
+          } catch (error) {
+            console.error("Failed to load stats from localStorage", error);
+          }
+          return initialStats;
+        }
+        function saveStats(stats) {
+          try {
+            localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+          } catch (error) {
+            console.error("Failed to save stats to localStorage", error);
+          }
+        }
+        function clearStats() {
+          try {
+            localStorage.removeItem(STATS_KEY);
+          } catch (error) {
+            console.error("Failed to clear stats from localStorage", error);
+          }
+        }
+        
+        // --- Utility function for time formatting ---
+        const formatTime = (totalSeconds) => {
+          const minutes = Math.floor(totalSeconds / 60);
+          const seconds = totalSeconds % 60;
+          return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        };
 
-    function isInBounds(row, col) {
-        return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
-    }
+        // --- From components/icons.tsx ---
+        const UndoIcon = ({ className }) => (
+          h('svg', {
+            xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none",
+            stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round",
+            strokeLinejoin: "round", className: className
+          },
+            h('path', { d: "M3 7v6h6" }),
+            h('path', { d: "M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" })
+          )
+        );
+        const ResetIcon = ({ className }) => (
+          h('svg', {
+            xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+            strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className: className
+          },
+            h('path', { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }),
+            h('path', { d: "M3 3v5h5" }),
+            h('path', { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" }),
+            h('path', { d: "M21 21v-5h-5" })
+          )
+        );
+        const TimerIcon = ({ className }) => (
+            h('svg', {
+                xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+                strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className: className
+            },
+                h('circle', { cx: "12", cy: "12", r: "10" }),
+                h('polyline', { points: "12 6 12 12 16 14" })
+            )
+        );
 
-    function isValidMove(row, col) {
-        return validMoves.some(([r, c]) => r === row && c === col);
-    }
+        // --- From components/Cell.tsx ---
+        const CellComponent = ({ number, isUsed, isValid, isLast, onClick }) => {
+          const baseClasses = "w-full h-full flex justify-center items-center font-bold rounded-md transition-all duration-200 aspect-square text-sm md:text-base";
+          let cellClasses = "";
+          if (isUsed) {
+            cellClasses = isLast
+              ? "bg-amber-500 text-white shadow-lg scale-110"
+              : "bg-emerald-600 text-white";
+          } else if (isValid) {
+            cellClasses = "bg-sky-500/50 hover:bg-sky-400/80 cursor-pointer";
+          } else {
+            cellClasses = "bg-slate-700 cursor-not-allowed";
+          }
+          return h('div', {
+            className: `${baseClasses} ${cellClasses}`,
+            onClick: isValid && !isUsed ? onClick : undefined
+          }, number);
+        };
+        const Cell = React.memo(CellComponent);
+        
+        // --- From components/Grid.tsx ---
+        const Grid = ({ grid, validMoves, lastPlaced, onCellClick }) => {
+          return h('div', { className: "grid grid-cols-10 gap-1 md:gap-1.5 p-2 bg-slate-800 rounded-lg shadow-inner" },
+            grid.map((row, rowIndex) =>
+              row.map((cell, colIndex) => {
+                const isValid = validMoves.some(move => move.row === rowIndex && move.col === colIndex);
+                const isLast = lastPlaced?.row === rowIndex && lastPlaced?.col === colIndex;
+                return h(Cell, {
+                  key: `${rowIndex}-${colIndex}`,
+                  number: cell.number,
+                  isUsed: cell.isUsed,
+                  isValid: isValid,
+                  isLast: isLast,
+                  onClick: () => onCellClick(rowIndex, colIndex),
+                });
+              })
+            )
+          );
+        };
 
-    function hasValidMoves() {
-        return validMoves.length > 0;
-    }
+        // --- From components/GameOverModal.tsx ---
+        const GameOverModal = ({ isOpen, score, time, onReset, onUndo }) => {
+          if (!isOpen) return null;
+          const isWin = score === GRID_SIZE * GRID_SIZE;
+          return h('div', { className: "fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 p-4" },
+            h('div', { className: "bg-slate-800 rounded-lg shadow-xl p-6 md:p-8 w-11/12 max-w-md text-center" },
+              h('h2', { className: `text-3xl font-bold mb-4 ${isWin ? 'text-green-400' : 'text-sky-400'}` }, isWin ? 'Congratulations!' : 'Game Over'),
+              h('p', { className: "text-slate-300 mb-2" }, isWin ? 'You filled the entire board!' : 'You ran out of moves.'),
+              h('div', { className: "space-y-4 my-6" },
+                h('div', { className: "flex justify-between items-center bg-slate-700 p-3 rounded-md" },
+                  h('span', { className: "text-slate-400" }, "Final Score:"),
+                  h('span', { className: "text-xl font-bold text-white" }, score)
+                ),
+                h('div', { className: "flex justify-between items-center bg-slate-700 p-3 rounded-md" },
+                  h('span', { className: "text-slate-400" }, "Time Taken:"),
+                  h('div', { className: "text-xl font-bold text-white" }, h('span', { className: "font-mono text-lg" }, formatTime(time)))
+                )
+              ),
+              h('div', { className: "flex flex-col sm:flex-row gap-3 mt-6" },
+                 h('button', {
+                  onClick: onUndo,
+                  className: "flex-1 flex items-center justify-center gap-2 bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200"
+                }, h(UndoIcon, { className: "w-5 h-5" }), "Undo"),
+                h('button', {
+                  onClick: onReset,
+                  className: "flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200"
+                }, "Play Again")
+              )
+            )
+          );
+        };
+        
+        // --- From components/StatsDisplay.tsx ---
+        const StatItem = ({ label, value }) => (
+            h('div', { className: "flex justify-between items-center bg-slate-700/50 p-3 rounded-md" },
+                h('span', { className: "text-sm text-slate-400" }, label),
+                h('span', { className: "text-lg font-bold text-white" }, value)
+            )
+        );
+        const StatsDisplay = ({ stats, onResetStats }) => {
+            const { gamesPlayed, wins, totalScore, fastestWinTime } = stats;
+            const winRate = gamesPlayed > 0 ? `${((wins / gamesPlayed) * 100).toFixed(0)}%` : 'N/A';
+            const averageScore = gamesPlayed > 0 ? (totalScore / gamesPlayed).toFixed(1) : 'N/A';
+            return (
+                h('div', { className: "bg-slate-800/50 p-4 rounded-xl shadow-2xl border border-slate-700" },
+                    h('h3', { className: "text-xl font-bold text-center mb-4 text-sky-300" }, "Statistics"),
+                    h('div', { className: "grid grid-cols-2 gap-3 mb-4" },
+                        h(StatItem, { label: "Played", value: gamesPlayed }),
+                        h(StatItem, { label: "Win Rate", value: winRate }),
+                        h(StatItem, { label: "Avg Score", value: averageScore }),
+                        h('div', { className: "flex justify-between items-center bg-slate-700/50 p-3 rounded-md" },
+                            h('span', { className: "text-sm text-slate-400" }, "Fastest Win"),
+                            h('div', { className: "text-lg font-bold text-white" },
+                                h('span', { className: "font-mono text-lg" }, fastestWinTime !== null ? formatTime(fastestWinTime) : 'N/A')
+                            )
+                        )
+                    ),
+                     h('button', {
+                        onClick: onResetStats,
+                        disabled: stats.gamesPlayed === 0,
+                        className: "w-full text-sm bg-red-800 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 disabled:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    }, "Reset Statistics")
+                )
+            );
+        };
 
-    function updateInfo() {
-        info.innerHTML = `<p>Numeri piazzati: ${cellsUsed}</p>`;
-    }
+        // --- From App.tsx ---
+        const createInitialGrid = () =>
+          Array.from({ length: GRID_SIZE }, () =>
+            Array.from({ length: GRID_SIZE }, () => ({
+              isUsed: false,
+              number: null,
+            }))
+          );
+        const App = () => {
+          const [grid, setGrid] = useState(createInitialGrid());
+          const [currentNumber, setCurrentNumber] = useState(1);
+          const [moveHistory, setMoveHistory] = useState([]);
+          const [gameOver, setGameOver] = useState(false);
+          const [elapsedTime, setElapsedTime] = useState(0);
+          const [isGameActive, setIsGameActive] = useState(false);
+          const [stats, setStats] = useState(loadStats());
+          const [previousStatsOnGameOver, setPreviousStatsOnGameOver] = useState(null);
 
-    function resetGame() {
-        initializeGame();
-    }
+          const lastPlaced = useMemo(() => moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null, [moveHistory]);
+          const score = currentNumber - 1;
+          const isInBounds = useCallback((row, col) => row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE, []);
 
-    initializeGame();
-  </script>
+          const validMoves = useMemo(() => {
+            if (gameOver) return [];
+            if (!lastPlaced) {
+              const allMoves = [];
+              for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) allMoves.push({ row: r, col: c });
+              }
+              return allMoves;
+            }
+            const moves = [];
+            DIRECTIONS.forEach(({ dr, dc }) => {
+              const newRow = lastPlaced.row + dr;
+              const newCol = lastPlaced.col + dc;
+              if (isInBounds(newRow, newCol) && !grid[newRow][newCol].isUsed) {
+                moves.push({ row: newRow, col: newCol });
+              }
+            });
+            return moves;
+          }, [lastPlaced, grid, gameOver, isInBounds]);
+
+          const handleGameOver = useCallback(() => {
+            setPreviousStatsOnGameOver(stats);
+            setStats(prevStats => {
+              const isWin = score === GRID_SIZE * GRID_SIZE;
+              let newFastestWinTime = prevStats.fastestWinTime;
+              if (isWin && (newFastestWinTime === null || elapsedTime < newFastestWinTime)) {
+                newFastestWinTime = elapsedTime;
+              }
+              const newStats = {
+                gamesPlayed: prevStats.gamesPlayed + 1,
+                wins: prevStats.wins + (isWin ? 1 : 0),
+                totalScore: prevStats.totalScore + score,
+                fastestWinTime: newFastestWinTime,
+              };
+              saveStats(newStats);
+              return newStats;
+            });
+            setGameOver(true);
+          }, [stats, score, elapsedTime]);
+
+          useEffect(() => {
+            let timer;
+            if (isGameActive && !gameOver) {
+              timer = window.setInterval(() => setElapsedTime(prevTime => prevTime + 1), 1000);
+            }
+            return () => { if (timer) clearInterval(timer); };
+          }, [isGameActive, gameOver]);
+
+          const handleReset = useCallback(() => {
+            setGrid(createInitialGrid());
+            setCurrentNumber(1);
+            setMoveHistory([]);
+            setGameOver(false);
+            setElapsedTime(0);
+            setIsGameActive(false);
+            setPreviousStatsOnGameOver(null);
+          }, []);
+
+          useEffect(() => {
+            if (isGameActive && validMoves.length === 0 && moveHistory.length > 0 && !gameOver) {
+              handleGameOver();
+            }
+          }, [validMoves, isGameActive, moveHistory, gameOver, handleGameOver]);
+
+          const handleCellClick = useCallback((row, col) => {
+            if (gameOver || !validMoves.some(m => m.row === row && m.col === col) || grid[row][col].isUsed) return;
+            if (!isGameActive) setIsGameActive(true);
+            const newGrid = grid.map(r => r.map(c => ({...c})));
+            newGrid[row][col] = { isUsed: true, number: currentNumber };
+            setGrid(newGrid);
+            setCurrentNumber(prev => prev + 1);
+            setMoveHistory(prev => [...prev, { row, col }]);
+          }, [gameOver, validMoves, grid, isGameActive, currentNumber]);
+
+          const handleUndo = useCallback(() => {
+            if (moveHistory.length === 0) return;
+            const newHistory = moveHistory.slice(0, -1);
+            const lastMove = moveHistory[moveHistory.length - 1];
+            const newGrid = grid.map(r => r.map(c => ({...c})));
+            newGrid[lastMove.row][lastMove.col] = { isUsed: false, number: null };
+            setGrid(newGrid);
+            setMoveHistory(newHistory);
+            setCurrentNumber(prev => prev - 1);
+            if (gameOver && previousStatsOnGameOver) {
+                setStats(previousStatsOnGameOver);
+                saveStats(previousStatsOnGameOver);
+                setPreviousStatsOnGameOver(null);
+            }
+            setGameOver(false);
+            if (newHistory.length === 0) {
+              setIsGameActive(false);
+              setElapsedTime(0);
+            }
+          }, [moveHistory, grid, gameOver, previousStatsOnGameOver]);
+
+          const handleResetStats = useCallback(() => {
+            if (window.confirm('Are you sure you want to reset all game statistics? This cannot be undone.')) {
+                clearStats();
+                setStats(initialStats);
+            }
+          }, []);
+
+          return (
+            h('div', { className: "min-h-screen w-full flex flex-col items-center justify-center p-4" },
+              h(GameOverModal, { isOpen: gameOver, score: score, time: elapsedTime, onReset: handleReset, onUndo: handleUndo }),
+              h('div', { className: "w-full max-w-lg mx-auto flex flex-col gap-6" },
+                h('header', { className: "text-center" },
+                  h('h1', { className: "text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-500" }, "Number Grid Challenge"),
+                  h('p', { className: "text-slate-400 mt-2" }, "Place numbers sequentially. How many can you place?")
+                ),
+                h('main', { className: "bg-slate-800/50 p-2 sm:p-4 rounded-xl shadow-2xl border border-slate-700" },
+                  h('div', { className: "flex justify-between items-center mb-4 px-2" },
+                    h('div', { className: "flex items-center gap-4" },
+                      h('div', { className: "text-center" },
+                        h('div', { className: "text-xs text-slate-400 uppercase tracking-wider" }, "Score"),
+                        h('div', { className: "text-2xl font-bold" }, score)
+                      ),
+                      h('div', { className: "text-center" },
+                         h('div', { className: "text-xs text-slate-400 uppercase tracking-wider" }, "Next"),
+                        h('div', { className: "text-2xl font-bold" }, currentNumber)
+                      )
+                    ),
+                    h('div', { className: "flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-full" },
+                      h(TimerIcon, { className: "w-5 h-5 text-sky-400" }),
+                      h('span', { className: "font-mono text-lg" }, formatTime(elapsedTime))
+                    )
+                  ),
+                  h(Grid, { grid: grid, validMoves: validMoves, lastPlaced: lastPlaced, onCellClick: handleCellClick }),
+                  h('div', { className: "flex justify-center gap-4 mt-4" },
+                    h('button', {
+                      onClick: handleUndo, disabled: moveHistory.length === 0,
+                      className: "flex items-center gap-2 px-6 py-2 bg-slate-600 hover:bg-slate-500 rounded-md text-white font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    }, h(UndoIcon, { className: "w-5 h-5" }), "Undo"),
+                    h('button', {
+                      onClick: handleReset,
+                      className: "flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-md text-white font-semibold transition-all duration-200"
+                    }, h(ResetIcon, { className: "w-5 h-5" }), "Reset")
+                  )
+                ),
+                h(StatsDisplay, { stats: stats, onResetStats: handleResetStats }),
+                h('footer', { className: "text-center text-slate-500 text-sm" },
+                  h('p', null, "Click a valid (blue) square to place the next number."),
+                  h('p', null, "Your next move must be 3 squares away horizontally/vertically or 2 squares diagonally.")
+                )
+              )
+            )
+          );
+        };
+
+        // --- From index.tsx ---
+        const rootElement = document.getElementById('root');
+        if (!rootElement) {
+          throw new Error("Could not find root element to mount to");
+        }
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(h(React.StrictMode, null, h(App, null)));
+    </script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>
